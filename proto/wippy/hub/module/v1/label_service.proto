@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package wippy.hub.module.v1;
+
+import "buf/validate/validate.proto";
+import "wippy/hub/module/v1/module.proto";
+import "wippy/hub/module/v1/version.proto";
+
+option go_package = "github.com/wippyai/proto-api/wippy/hub/module/v1;modulev1";
+
+// Service for managing version labels.
+// Labels are mutable references to versions (e.g., "latest", "stable").
+service LabelService {
+  // Create or update a label.
+  rpc SetLabel(SetLabelRequest) returns (SetLabelResponse) {
+    option idempotency_level = IDEMPOTENT;
+  }
+
+  // Delete a label.
+  rpc DeleteLabel(DeleteLabelRequest) returns (DeleteLabelResponse) {}
+
+  // Get a label.
+  rpc GetLabel(GetLabelRequest) returns (GetLabelResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // List labels for a module.
+  rpc ListLabels(ListLabelsRequest) returns (ListLabelsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+// Request to set a label.
+message SetLabelRequest {
+  // Module reference.
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+  // Label name.
+  string name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 32
+    pattern: "^[a-z][a-z0-9-]*$"
+  }];
+  // Version to point to.
+  VersionRef version = 3 [(buf.validate.field).required = true];
+}
+
+// Response for set label.
+message SetLabelResponse {
+  Label label = 1;
+}
+
+// Request to delete a label.
+message DeleteLabelRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+  string name = 2 [(buf.validate.field).string.min_len = 1];
+}
+
+// Response for delete label.
+message DeleteLabelResponse {}
+
+// Request to get a label.
+message GetLabelRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+  string name = 2 [(buf.validate.field).string.min_len = 1];
+}
+
+// Response for get label.
+message GetLabelResponse {
+  Label label = 1;
+  Version version = 2;
+}
+
+// Request to list labels.
+message ListLabelsRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+}
+
+// Response for list labels.
+message ListLabelsResponse {
+  repeated Label labels = 1;
+}

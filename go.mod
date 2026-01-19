@@ -1,4 +1,4 @@
-module github.com/wippyai/module-registry-proto-go
+module github.com/wippyai/proto-api
 
 go 1.24.0
 

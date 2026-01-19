@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package wippy.hub.module.v1;
+
+import "buf/validate/validate.proto";
+import "wippy/hub/module/v1/module.proto";
+
+option go_package = "github.com/wippyai/proto-api/wippy/hub/module/v1;modulev1";
+
+// Service for managing user favorites.
+service FavoriteService {
+  // Add a module to favorites.
+  rpc AddFavorite(AddFavoriteRequest) returns (AddFavoriteResponse) {
+    option idempotency_level = IDEMPOTENT;
+  }
+
+  // Remove a module from favorites.
+  rpc RemoveFavorite(RemoveFavoriteRequest) returns (RemoveFavoriteResponse) {
+    option idempotency_level = IDEMPOTENT;
+  }
+
+  // Check if a module is favorited.
+  rpc IsFavorited(IsFavoritedRequest) returns (IsFavoritedResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // List user's favorite modules.
+  rpc ListFavorites(ListFavoritesRequest) returns (ListFavoritesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+// Request to add favorite.
+message AddFavoriteRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+}
+
+// Response for add favorite.
+message AddFavoriteResponse {}
+
+// Request to remove favorite.
+message RemoveFavoriteRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+}
+
+// Response for remove favorite.
+message RemoveFavoriteResponse {}
+
+// Request to check if favorited.
+message IsFavoritedRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+}
+
+// Response for is favorited.
+message IsFavoritedResponse {
+  bool favorited = 1;
+}
+
+// Request to list favorites.
+message ListFavoritesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+// Response for list favorites.
+message ListFavoritesResponse {
+  repeated Module modules = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}

@@ -1,0 +1,274 @@
+syntax = "proto3";
+
+package wippy.hub.module.v1;
+
+import "buf/validate/validate.proto";
+import "wippy/hub/module/v1/module.proto";
+import "wippy/hub/module/v1/version.proto";
+
+option go_package = "github.com/wippyai/proto-api/wippy/hub/module/v1;modulev1";
+
+// Service for managing modules.
+service ModuleService {
+  // Create a new module.
+  rpc CreateModule(CreateModuleRequest) returns (CreateModuleResponse) {}
+
+  // Get a module by ID or name.
+  rpc GetModule(GetModuleRequest) returns (GetModuleResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // List modules with filtering.
+  rpc ListModules(ListModulesRequest) returns (ListModulesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // Update module settings.
+  rpc UpdateModule(UpdateModuleRequest) returns (UpdateModuleResponse) {}
+
+  // Delete a module.
+  rpc DeleteModule(DeleteModuleRequest) returns (DeleteModuleResponse) {}
+
+  // Deprecate a module.
+  rpc DeprecateModule(DeprecateModuleRequest) returns (DeprecateModuleResponse) {}
+
+  // Search modules.
+  rpc SearchModules(SearchModulesRequest) returns (SearchModulesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // List versions of a module.
+  rpc ListVersions(ListVersionsRequest) returns (ListVersionsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // Get a specific version.
+  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // List files in a version.
+  rpc ListVersionFiles(ListVersionFilesRequest) returns (ListVersionFilesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // Get module dependencies.
+  rpc GetDependencies(GetDependenciesRequest) returns (GetDependenciesResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+
+  // Get modules that depend on this one.
+  rpc GetDependents(GetDependentsRequest) returns (GetDependentsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+  }
+}
+
+// Request to create a module.
+message CreateModuleRequest {
+  // Organization ID.
+  string organization_id = 1 [(buf.validate.field).string.uuid = true];
+  // Module name.
+  string name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^[a-z][a-z0-9-]*$"
+  }];
+  // Module description.
+  string description = 3;
+  // Visibility.
+  Visibility visibility = 4;
+  // Module type.
+  ModuleType type = 5;
+}
+
+// Response for create module.
+message CreateModuleResponse {
+  Module module = 1;
+}
+
+// Request to get a module.
+message GetModuleRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+}
+
+// Response for get module.
+message GetModuleResponse {
+  Module module = 1;
+}
+
+// Request to list modules.
+message ListModulesRequest {
+  // Filter by organization.
+  string organization_id = 1;
+  // Page number (1-based).
+  int32 page = 2;
+  // Items per page.
+  int32 page_size = 3;
+  // Filter by visibility.
+  Visibility visibility = 4;
+  // Filter by type.
+  ModuleType type = 5;
+  // Sort order.
+  ModuleSortOrder sort_order = 6;
+}
+
+// Sort order for modules.
+enum ModuleSortOrder {
+  MODULE_SORT_ORDER_UNSPECIFIED = 0;
+  MODULE_SORT_ORDER_NAME_ASC = 1;
+  MODULE_SORT_ORDER_NAME_DESC = 2;
+  MODULE_SORT_ORDER_CREATED_DESC = 3;
+  MODULE_SORT_ORDER_UPDATED_DESC = 4;
+  MODULE_SORT_ORDER_DOWNLOADS_DESC = 5;
+}
+
+// Response for list modules.
+message ListModulesResponse {
+  repeated Module modules = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Request to update a module.
+message UpdateModuleRequest {
+  // Module to update.
+  string module_id = 1 [(buf.validate.field).string.uuid = true];
+  // New description (optional).
+  optional string description = 2;
+  // New visibility (optional).
+  optional Visibility visibility = 3;
+}
+
+// Response for update module.
+message UpdateModuleResponse {
+  Module module = 1;
+}
+
+// Request to delete a module.
+message DeleteModuleRequest {
+  string module_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+// Response for delete module.
+message DeleteModuleResponse {}
+
+// Request to deprecate a module.
+message DeprecateModuleRequest {
+  string module_id = 1 [(buf.validate.field).string.uuid = true];
+  string message = 2;
+  // Alternative module to recommend.
+  ModuleRef alternative = 3;
+}
+
+// Response for deprecate module.
+message DeprecateModuleResponse {
+  Module module = 1;
+}
+
+// Request to search modules.
+message SearchModulesRequest {
+  // Search query.
+  string query = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 200
+  }];
+  // Page number.
+  int32 page = 2;
+  // Items per page.
+  int32 page_size = 3;
+  // Filter by keywords.
+  repeated string keywords = 4;
+  // Filter by license.
+  string license = 5;
+  // Include deprecated.
+  bool include_deprecated = 6;
+}
+
+// Response for search modules.
+message SearchModulesResponse {
+  repeated Module modules = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Request to list versions.
+message ListVersionsRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+  int32 page = 2;
+  int32 page_size = 3;
+  // Include yanked versions.
+  bool include_yanked = 4;
+}
+
+// Response for list versions.
+message ListVersionsResponse {
+  repeated Version versions = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Request to get a version.
+message GetVersionRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+  VersionRef version = 2 [(buf.validate.field).required = true];
+}
+
+// Response for get version.
+message GetVersionResponse {
+  Version version = 1;
+}
+
+// Request to list version files.
+message ListVersionFilesRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+  VersionRef version = 2 [(buf.validate.field).required = true];
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Response for list version files.
+message ListVersionFilesResponse {
+  repeated VersionFile files = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Request to get dependencies.
+message GetDependenciesRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+  VersionRef version = 2;
+}
+
+// Response for get dependencies.
+message GetDependenciesResponse {
+  repeated Dependency dependencies = 1;
+}
+
+// Request to get dependents.
+message GetDependentsRequest {
+  ModuleRef module = 1 [(buf.validate.field).required = true];
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+// Response for get dependents.
+message GetDependentsResponse {
+  // Modules that depend on this one.
+  repeated DependentModule dependents = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+// Module that depends on another.
+message DependentModule {
+  string org = 1;
+  string name = 2;
+  string version = 3;
+  // Version constraint used.
+  string constraint = 4;
+}
